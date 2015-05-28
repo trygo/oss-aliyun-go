@@ -45,6 +45,7 @@ type Auth struct {
 type OSS struct {
 	Auth
 	Region string
+	Host   string
 }
 
 // The Bucket type encapsulates operations with an S3 bucket.
@@ -80,9 +81,12 @@ func RetryAttempts(retry bool) {
 }
 
 // New creates a new S3.
-func New(region, accessId, accessKey string) *OSS {
+func New(host, region, accessId, accessKey string) *OSS {
 	auth := Auth{accessId, accessKey}
-	return &OSS{auth, region}
+	if host == "" {
+		host = DefaultHost
+	}
+	return &OSS{auth, region, host}
 }
 
 // Bucket returns a Bucket with the given name.
@@ -203,10 +207,15 @@ func (b *Bucket) Put(path string, data []byte, contType string, perm ACL) error 
 // from r until EOF.
 func (b *Bucket) PutReader(path string, r io.Reader, length int64, contType string, perm ACL) error {
 	headers := map[string][]string{
-		"Content-Length": {strconv.FormatInt(length, 10)},
-		"Content-Type":   {contType},
-		"x-oss-acl":      {string(perm)},
+		//"Content-Length": {strconv.FormatInt(length, 10)},
+		"Content-Type": {contType},
+		"x-oss-acl":    {string(perm)},
 	}
+
+	if length > 0 {
+		headers["Content-Length"] = []string{strconv.FormatInt(length, 10)}
+	}
+
 	req := &request{
 		method:  "PUT",
 		bucket:  b.Name,
@@ -483,7 +492,7 @@ func (oss *OSS) prepare(req *request) error {
 		}
 		req.signpath = req.path
 
-		req.baseurl = DefaultHost
+		req.baseurl = oss.Host //DefaultHost
 		if oss.Region != "" && oss.Region != DefaultRegion {
 			req.baseurl = fmt.Sprintf("http://%s.aliyuncs.com", oss.Region)
 		}

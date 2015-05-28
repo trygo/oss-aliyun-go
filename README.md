@@ -5,7 +5,7 @@
 go get:
 
 ```
-$ go get github.com/PinIdea/oss-aliyun-go
+$ go get github.com/trygo/oss-aliyun-go
 ```
 
 ### Example 
@@ -16,7 +16,7 @@ package main
 import (
 	"log"
 
-	"github.com/Pinidea/oss-aliyun-go"
+	"github.com/trygo/oss-aliyun-go"
 )
 
 func main() {
